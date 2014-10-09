@@ -1,6 +1,5 @@
 package som;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,8 +17,8 @@ public class SombieTrainer {
     private double learningRate;
 
     // These constants can be changed to play with the learning algorithm
-    private static final double START_LEARNING_RATE = 0.05; // 0.07;
-    private static final int NUM_ITERATIONS = 1000;
+    private static final double START_LEARNING_RATE = 0.07;
+    private static final int NUM_ITERATIONS = 500;
 
     public SombieTrainer() {
 	this.latticeWidth = 10;
@@ -32,62 +31,18 @@ public class SombieTrainer {
 	this.latticeWidth = w;
 	this.latticeHeight = h;
 	this.featureDimensionality = d;
-	this.lattice = new SombieLattice(latticeWidth, latticeHeight,featureDimensionality);
+	this.lattice = new SombieLattice(latticeWidth, latticeHeight,
+		featureDimensionality);
 	this.iteration = 0;
 
 	this.initData();
     }
 
-    public SombieSample worbit;
     public void initData() {
-	vectors = new ArrayList<SombieSample>();
-	SombieVector sv;
-	if (featureDimensionality > 2) {
-	    double h = 0.51;
-	    double l = 0.49;
-	    double[] w = {
-		    h,l,l,
-		    h,h,l,
-		    h,l,l,
-		    l,l,h,
-		    h,l,l,
-		    l,l,h
-	    };
-	    SombieVector temp = new SombieVector();
-	    for (double d : w) temp.addElement(d);
-	    worbit = new SombieSample(temp);
-	    vectors.add(worbit);
-	    
-	    for (int i = 0; i < 12; i++) {
-		sv = new SombieVector();
-		for (int j = 0; j < this.featureDimensionality; j++) {
-		    sv.addElement(Math.random());
-		}
-		vectors.add(new SombieSample(sv));
-	    }
-	} else {
-	    for (int i = 0; i < 800; i++) {
-		sv = new SombieVector();
-		double rad = 0.4 + Math.random() * 0.6;
-		double a = Math.random() * Math.PI * 2;
-
-		sv.addElement(2*rad * Math.sin(a));
-		sv.addElement(rad * Math.cos(a));
-		vectors.add(new SombieSample(sv));
-	    }
-	}
-
 	LATTICE_RADIUS = Math.max(latticeHeight, latticeWidth) / 2d;
 	TIME_CONSTANT = NUM_ITERATIONS / Math.log(LATTICE_RADIUS);
     }
-    
-//    public void setVectors(List<SombieVector> vs) {
-//	this.vectors = new ArrayList<SombieSample>();
-//	for (SombieVector v : vs) {
-//	    this.vectors.add(new SombieSample(v));
-//	}
-//    }
-    
+
     public void setSamples(List<SombieSample> ss) {
 	this.vectors = ss;
 	System.out.println(this.vectors.size());
@@ -97,8 +52,9 @@ public class SombieTrainer {
 	if (iteration > NUM_ITERATIONS) {
 	    return;
 	}
-	if (iteration==NUM_ITERATIONS) System.out.println("DONE");
-	
+	if (iteration == NUM_ITERATIONS)
+	    System.out.println("DONE");
+
 	lattice.clearCloseTos();
 
 	Collections.shuffle(vectors);
@@ -106,9 +62,7 @@ public class SombieTrainer {
 	double nbhRad = getNeighborhoodRadius();
 	int xs, xe, ys, ye;
 	for (SombieSample v : vectors) {
-
-	    if (randomize && vectors.indexOf(v)!=vectors.indexOf(worbit)) {
-//	if (randomize) {
+	    if (randomize) {
 		// randomize input in every loop, good for colors
 		for (int i = 0; i < v.weights.size(); i++) {
 		    v.weights.set(i, Math.random());
@@ -121,10 +75,6 @@ public class SombieTrainer {
 	    ys = (int) (bmu.getY() - nbhRad - 1);
 	    xe = (int) (bmu.getX() + nbhRad + 1);
 	    ye = (int) (bmu.getY() + nbhRad + 1);
-	    // if (xs < 0)
-	    // xs = 0;
-	    // if (xe > latticeWidth)
-	    // xe = latticeWidth;
 	    if (latticeHeight == 1) {
 		if (ys < 0)
 		    ys = 0;
@@ -139,16 +89,18 @@ public class SombieTrainer {
 			double dist = temp.distanceTo(bmu);
 			if (dist <= (nbhRad * nbhRad)) {
 			    double dFalloff = getDistanceFalloff(dist, nbhRad);
-			    temp.adjustWeights(v.weights, learningRate, dFalloff);
+			    temp.adjustWeights(v.weights, learningRate,
+				    dFalloff);
 			}
 		    }
 		}
 	    }
 	}
 	iteration++;
-	learningRate = START_LEARNING_RATE* Math.exp(-(double) iteration / NUM_ITERATIONS);
+	learningRate = START_LEARNING_RATE
+		* Math.exp(-(double) iteration / NUM_ITERATIONS);
 
-	if (iteration % 1 == 0)
+	if (iteration % 10 == 0)
 	    System.out.print(".");
 	if (iteration % 100 == 0)
 	    System.out.println();
@@ -167,16 +119,14 @@ public class SombieTrainer {
 	return lattice;
     }
 
-//    public List<SombieVector> getVectors() {
-//	return vectors;
-//    }
-    
     public List<SombieSample> getSamples() {
 	return vectors;
     }
 
     public int getIteration() {
-	if (iteration>NUM_ITERATIONS) return 0;
-	else return iteration;
+	if (iteration > NUM_ITERATIONS)
+	    return 0;
+	else
+	    return iteration;
     }
 }
